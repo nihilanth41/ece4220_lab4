@@ -1,0 +1,58 @@
+#+DATE: 2017-03-06
+#+TITLE: ECE 4220
+#+AUTHOR: Zachary Rump
+#+OPTIONS: toc:nil H:4 num:0 ^:nil
+#+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
+\overfullrule=2cm
+* Lab 4 Prelab
+** Realtime fifos 
+Include rtai_fifos.h
+
+- int rtf_create(unsigned int minor, int size)
+  - minor: positive int less than RTF_NO. Identifies the fifo.
+  - size: size of the fifo, can resize existing ones. (bytes? doesn't specify) 
+  - returns 0 on success; ENODEV or ENOMEM on failure.
+
+- int rtf_destroy(unsigned int minor)
+  - minor: identifier
+  - Needs to be called as many times as rtf_create(). 
+  - Returns non-negative value on success - the number of fifos that still need closed
+  - Returns negative value on failure - ENODEV or EINVAL
+
+- int rtf_get(unsigned int minor, void *buf, int count)
+  - minor: identifier
+  - buf: pointer to buffer 
+  - count: size of buffer in bytes
+  - Returns size of the received block on success; ENODEV or EINVAL on failure.
+
+- int rtf_put(unsigned int minor, void *buf, int count)
+  - Essentially the same usage as rtf_get()
+** Userspace semaphore 
+For all functions:
+Include semaphore.h and link with -lpthread.
+Returns 0 on success, -1 on error (and sets errno).
+
+- int sem_init(sem_t *sem, int pshared, unsigned int value)
+  - sem: Pointer to sem_t to be initalized.
+  - phared: 0 for sharing between threads only. Nonzero for sharing between processes.
+  - value: value to initialize to (i.e. number of non-blocking calls to sem_wait() )
+    
+- int sem_wait(sem_t *sem)
+ - Decrements (locks) the semaphore pointed to by sem. Returns immediately if semaphore value is greater than 0, else blocks.
+
+- int sem_destroy(sem_t *sem)
+ - Destroys the semaphore
+
+- int sem_post(sem_t *sem)
+ - Increments (unlocks) the semaphore
+
+** Flowchart
+[[../images/p1_flowchart.png]]
+
+Flowchart from the Lab 4 document.
+** Sources
+[[https://www.rtai.org/userfiles/documentation/magma/html/api/group__fifos__ipc.html]]
+- man 3 sem_init
+- man 3 sem_wait
+- man 3 sem_destroy
+- man 3 sem_post
