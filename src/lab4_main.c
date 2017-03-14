@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <pthread.h>
 #include "serial_ece4220.h"
 
 #define DATA_MAX 256
@@ -12,11 +13,14 @@ typedef struct gps_st {
 	struct timeval tv;
 } gps_t;
 
+pthread_t tid;
+
 // Common buffer for data and time
 gps_t data_buffer[DATA_MAX];
 
 int main(int argc, char **argv) {
-
+	// Create thread to read from fifo (kernel)
+	// pthread_create(&tid, NULL, (void *)read_fifo, NULL); //(void *)
 	// Attempt to open serial port
 	int port_id = serial_open(0, 0, 5);
         unsigned char buf=0;
