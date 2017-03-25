@@ -1,0 +1,39 @@
+#+AUTHOR: Zachary Rump
+#+DATE: 2017-03-21
+#+TITLE: ECE 4220
+#+OPTIONS: toc:nil H:4 num:0 ^:nil
+#+LATEX_HEADER: \usepackage[margin=0.5in]{geometry}
+\overfullrule=2cm
+* Lab 4 Report
+** Objectives
+The main objectives for the Lab were 
+*** Lab Description
+The specific objectives of the Lab:
+1. 
+2. 
+** Implementation
+*** Flowcharts
+#+ATTR_LATEX: :width 237px :height 376px
+[[./images/flowchart_pt1.png]]`
+** Experiments and Results
+*** Part 1 
+*** Part 2 
+** Discussion
+*** Part 1
+The main issue encountered in part one was probably misunderstanding the usage
+*** Part 2
+*** Post Lab Questions:
+** Code  
+*** Part 1
+#+NAME: Part 1
+#+ATTR_LATEX: :foat nil
+#+BEGIN_SRC C
+
+#+END_SRC
+*** Part 2
+#+NAME: Part 2
+#+ATTR_LATEX: :foat nil
+#+BEGIN_SRC C 
+
+#+END_SRC 
+    
