@@ -173,14 +173,15 @@ void read_fifo(void) {
 }
 
 int main(void) {
-  pthread_t tid;
+  pthread_t tid[1];
   unsigned char buf=0;
   ssize_t num_bytes=0;
   // Create named pipe
   int ret = system("mkfifo FIFO_WRITE");
   // Create thread to read from kernel fifo (real time fifo)
-  pthread_create(&tid, NULL, (void *)read_fifo, NULL);
+  pthread_create(&tid[0], NULL, (void *)read_fifo, NULL);
   // Create thread to read from user space fifo (written by serial_wait())
+  pthread_create(&tid[1], NULL, (void *)fifo_print, NULL);
   // Attempt to open serial port
   int port_id = serial_open(0, 0, 5);
   // Endlessly loop and read from serial port
