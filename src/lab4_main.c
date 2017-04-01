@@ -57,8 +57,7 @@ unsigned int nextIndex(unsigned int j) {
     return (unsigned int)j+1;
 }
 
-void fifo_print(void *args) {
-  // No args
+void fifo_print(void) {
   int fd = open("FIFO_WRITE", O_RDONLY);
   if(fd < 0)
     {
@@ -77,9 +76,21 @@ void fifo_print(void *args) {
 	    return;
 	}
       // TODO interpolate
+      // y = y0 + (x - x0)( (y1-y0) / (x1-x0) )
+      // x = time, y = data
+      double x0,x1,y0,y1,x,y;
+      // Combine integral usec and second values into a single floating point value.
+      x0 = (double)gps_data.gps_last.tv.tv_sec + (((double)(gps_data.gps_last.tv.tv_usec))*(0.000001));
+      x = (double)gps_data.event_tv.tv_sec + (((double)(gps_data.event_tv.tv_usec))*(0.000001));
+      x1 = (double)gps_data.gps_next.tv.tv_sec + (((double)(gps_data.gps_next.tv.tv_usec))*(0.000001));
+      y0 = (double)gps_data.gps_last.data;
+      y1 = (double)gps_data.gps_next.data;
+      // Linearly Interpolate data point (y) given the three time points (x)
+      y = y0 + (x-x0)*((y1-y0)/(x1-x0));
+
       // Print to stdout
       printf("Last GPS event: %d, %u.%ld\n", gps_data.gps_last.data, (unsigned int)gps_data.gps_last.tv.tv_sec, gps_data.gps_last.tv.tv_usec);
-      printf("Push Button event: %u.%ld\n", (unsigned int)gps_data.event_tv.tv_sec, gps_data.event_tv.tv_usec);
+      printf("(Interpolated) Push Button event: %lf, %u.%ld\n", y, (unsigned int)gps_data.event_tv.tv_sec, gps_data.event_tv.tv_usec);
       printf("Next GPS event: %d, %u.%ld\n", gps_data.gps_last.data, (unsigned int)gps_data.gps_last.tv.tv_sec, gps_data.gps_last.tv.tv_usec);
     }
 }
@@ -106,7 +117,7 @@ void serial_wait(void *args) {
     // Then write data to the named pipe
     {
       // Copy value of global iterator
-      int j = i;
+      unsigned int j = (unsigned)i;
       // If global iterator == last_index + 2
       if(j == nextIndex(nextIndex(gps_dp->gps_last_index)))
 	{
@@ -125,7 +136,7 @@ void serial_wait(void *args) {
 
 
 // Scheduled every 75ms
-void read_fifo(void *args) {
+void read_fifo(void) {
   struct timeval event_tv;
   static pthread_t thread_buf[EVENT_MAX];
   static gps_final gps_data[EVENT_MAX];
@@ -161,7 +172,7 @@ void read_fifo(void *args) {
   }
 }
 
-int main(int argc, char **argv) {
+int main(void) {
   pthread_t tid;
   unsigned char buf=0;
   ssize_t num_bytes=0;
@@ -188,8 +199,8 @@ int main(int argc, char **argv) {
 	  event_count = 0; 
 	  data_buffer[i].data = buf;
 	  // Get timestamp
-	  struct timeval *tv_ptr;
-	  int ret = gettimeofday(tv_ptr, NULL);
+	  struct timeval *tv_ptr = NULL;
+	  ret = gettimeofday(tv_ptr, NULL);
 	  if(-1 == ret)
 	    {
 	      // Error gettime()
