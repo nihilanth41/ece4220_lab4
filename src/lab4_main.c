@@ -75,23 +75,25 @@ void fifo_print(void) {
 	    fprintf(stderr, "Error read() FIFO_WRITE\n%s\n", strerror(errno));
 	    return;
 	}
+
       // TODO interpolate
       // y = y0 + (x - x0)( (y1-y0) / (x1-x0) )
       // x = time, y = data
-      double x0,x1,y0,y1,x,y;
-      // Combine integral usec and second values into a single floating point value.
-      x0 = (double)gps_data.gps_last.tv.tv_sec + (((double)(gps_data.gps_last.tv.tv_usec))*(0.000001));
-      x = (double)gps_data.event_tv.tv_sec + (((double)(gps_data.event_tv.tv_usec))*(0.000001));
-      x1 = (double)gps_data.gps_next.tv.tv_sec + (((double)(gps_data.gps_next.tv.tv_usec))*(0.000001));
-      y0 = (double)gps_data.gps_last.data;
-      y1 = (double)gps_data.gps_next.data;
-      // Linearly Interpolate data point (y) given the three time points (x)
-      y = y0 + (x-x0)*((y1-y0)/(x1-x0));
+      //double x0,x1,y0,y1,x,y;
+      //// Combine integral usec and second values into a single floating point value.
+      //x0 = (double)gps_data.gps_last.tv.tv_sec + (((double)(gps_data.gps_last.tv.tv_usec))*(0.000001));
+      //x = (double)gps_data.event_tv.tv_sec + (((double)(gps_data.event_tv.tv_usec))*(0.000001));
+      //x1 = (double)gps_data.gps_next.tv.tv_sec + (((double)(gps_data.gps_next.tv.tv_usec))*(0.000001));
+      //y0 = (double)gps_data.gps_last.data;
+      //y1 = (double)gps_data.gps_next.data;
+      //// Linearly Interpolate data point (y) given the three time points (x)
+      //y = y0 + (x-x0)*((y1-y0)/(x1-x0));
 
       // Print to stdout
+      printf("Last index: %u\n", gps_data.gps_last_index);
       printf("Last GPS event: %d, %u.%ld\n", gps_data.gps_last.data, (unsigned int)gps_data.gps_last.tv.tv_sec, gps_data.gps_last.tv.tv_usec);
-      printf("(Interpolated) Push Button event: %lf, %u.%ld\n", y, (unsigned int)gps_data.event_tv.tv_sec, gps_data.event_tv.tv_usec);
-      printf("Next GPS event: %d, %u.%ld\n", gps_data.gps_last.data, (unsigned int)gps_data.gps_last.tv.tv_sec, gps_data.gps_last.tv.tv_usec);
+      //printf("(Interpolated) Push Button event: %lf, %u.%ld\n", y, (unsigned int)gps_data.event_tv.tv_sec, gps_data.event_tv.tv_usec);
+      printf("Next GPS event: %d, %u.%ld\n", gps_data.gps_next.data, (unsigned int)gps_data.gps_next.tv.tv_sec, gps_data.gps_next.tv.tv_usec);
     }
 }
 
@@ -105,6 +107,7 @@ void serial_wait(void *args) {
       return;
     }
   gps_final *gps_dp = (gps_final *)args;
+  gps_final gps_write;
 
   int fd = open("FIFO_WRITE", O_WRONLY);
   if(-1 == fd)
@@ -113,19 +116,22 @@ void serial_wait(void *args) {
       fprintf(stderr, "Error open() FIFO_WRITE\n%s\n", strerror(errno));
       return;
     }
+
+  unsigned int nextIndex_val = nextIndex(nextIndex(gps_dp->gps_last_index));
+
   while(1) // Loop until iterator is equal to gps_last_index + 2
     // Then write data to the named pipe
     {
       // Copy value of global iterator
       unsigned int j = (unsigned)i;
       // If global iterator == last_index + 2
-      if(j == nextIndex(nextIndex(gps_dp->gps_last_index)))
-	{
+      //if(j >= nextIndex_val)
 	  // Copy the last gps value
-	  gps_dp->gps_last = data_buffer[lastIndex(j)];
-	}
+      gps_dp->gps_next = data_buffer[lastIndex(nextIndex_val)];
+      // Copy data
+      memcpy((void *)&gps_write, (void *)gps_dp, sizeof(gps_final));
       // Write data to fifo
-      int ret = write(fd, (void *)gps_dp, sizeof(gps_dp));
+      int ret = write(fd, (void *)&gps_write, sizeof(gps_write));
       if(-1 == ret)
 	{
 	    fprintf(stderr, "Error write FIFO_WRITE\n%s\n", strerror(errno));
@@ -165,7 +171,9 @@ void read_fifo(void) {
 	gps_data[event_count].gps_last = data_buffer[last_index];
 	gps_data[event_count].event_tv = event_tv;
 	// Spin up thread on each button press
-	pthread_create(&thread_buf[event_count], NULL, (void *)serial_wait, (void *)&gps_data[event_count]);
+	gps_final gps_data_tmp;
+	memcpy((void *)&gps_data_tmp, (void *)&gps_data[event_count], sizeof(gps_final));
+	pthread_create(&thread_buf[event_count], NULL, (void *)serial_wait, (void *)&gps_data_tmp);
 	// Increment event counter
 	event_count++;
       }
