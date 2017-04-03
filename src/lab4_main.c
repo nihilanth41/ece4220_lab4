@@ -118,25 +118,28 @@ void serial_wait(void *args) {
     }
 
   unsigned int nextIndex_val = nextIndex(nextIndex(gps_dp->gps_last_index));
-
   while(1) // Loop until iterator is equal to gps_last_index + 2
     // Then write data to the named pipe
     {
       // Copy value of global iterator
       unsigned int j = (unsigned)i;
       // If global iterator == last_index + 2
-      //if(j >= nextIndex_val)
+      if(j != gps_dp->gps_last_index && j != nextIndex(gps_dp->gps_last_index))
+      {
 	  // Copy the last gps value
-      gps_dp->gps_next = data_buffer[lastIndex(nextIndex_val)];
-      // Copy data
-      memcpy((void *)&gps_write, (void *)gps_dp, sizeof(gps_final));
-      // Write data to fifo
-      int ret = write(fd, (void *)&gps_write, sizeof(gps_write));
-      if(-1 == ret)
-	{
-	    fprintf(stderr, "Error write FIFO_WRITE\n%s\n", strerror(errno));
+	gps_dp->gps_next = data_buffer[lastIndex(nextIndex_val)];
+	// Copy data
+	memcpy((void *)&gps_write, (void *)gps_dp, sizeof(gps_final));
+	// Write data to fifo
+	int ret = write(fd, (void *)&gps_write, sizeof(gps_write));
+	if(-1 == ret)
+		{
+		fprintf(stderr, "Error write FIFO_WRITE\n%s\n", strerror(errno));
 	}
-      break;
+	break;
+      }
+      // else 
+      // wait
     }
 }
 
