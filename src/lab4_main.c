@@ -15,7 +15,7 @@
 // Max number of push button events that can happen in the 250ms window
 // Determines size of pthread_t array and thread argument array
 #define EVENT_MAX 5
-#define FIFO_READ /dev/rtf/1  // /dev/rtf/<FIFO_ID>
+#define FIFO_READ 1  // /dev/rtf/<FIFO_ID>
 #define FIFO_WRITE named_pipe // Thread 1 will write, Thread 2 will read and print to stdout
 
 // Struct to hold data + timestamp from serial port
@@ -141,7 +141,7 @@ void read_fifo(void) {
   static pthread_t thread_buf[EVENT_MAX];
   static gps_final gps_data[EVENT_MAX];
 
-  int fd = open("FIFO_READ", O_RDWR);
+  int fd = open("/dev/rtf/1", O_RDWR);
   if(-1 == fd)
     {
       // Error
@@ -200,16 +200,12 @@ int main(void) {
 	  event_count = 0; 
 	  data_buffer[i].data = buf;
 	  // Get timestamp
-	  struct timeval *tv_ptr = NULL;
+	  struct timeval *tv_ptr = &data_buffer[i].tv;
 	  ret = gettimeofday(tv_ptr, NULL);
 	  if(-1 == ret)
 	    {
 	      // Error gettime()
 	      return EXIT_FAILURE;
-	    }
-	  else
-	    {
-	      data_buffer[i].tv = *tv_ptr;
 	    }
 	}
     }
