@@ -79,21 +79,23 @@ void fifo_print(void) {
       // TODO interpolate
       // y = y0 + (x - x0)( (y1-y0) / (x1-x0) )
       // x = time, y = data
-      //double x0,x1,y0,y1,x,y;
-      //// Combine integral usec and second values into a single floating point value.
-      //x0 = (double)gps_data.gps_last.tv.tv_sec + (((double)(gps_data.gps_last.tv.tv_usec))*(0.000001));
-      //x = (double)gps_data.event_tv.tv_sec + (((double)(gps_data.event_tv.tv_usec))*(0.000001));
-      //x1 = (double)gps_data.gps_next.tv.tv_sec + (((double)(gps_data.gps_next.tv.tv_usec))*(0.000001));
-      //y0 = (double)gps_data.gps_last.data;
-      //y1 = (double)gps_data.gps_next.data;
-      //// Linearly Interpolate data point (y) given the three time points (x)
-      //y = y0 + (x-x0)*((y1-y0)/(x1-x0));
+      double x0,x1,y0,y1,x,y;
+      // Combine integral usec and second values into a single floating point value.
+      x0 = (double)gps_data.gps_last.tv.tv_sec + (((double)(gps_data.gps_last.tv.tv_usec))*(0.000001));
+      x = (double)gps_data.event_tv.tv_sec + (((double)(gps_data.event_tv.tv_usec))*(0.000001));
+      x1 = (double)gps_data.gps_next.tv.tv_sec + (((double)(gps_data.gps_next.tv.tv_usec))*(0.000001));
+      y0 = (double)gps_data.gps_last.data;
+      y1 = (double)gps_data.gps_next.data;
+      // Linearly Interpolate data point (y) given the three time points (x)
+      y = y0 + (x-x0)*((y1-y0)/(x1-x0));
 
       // Print to stdout
-      printf("Last index: %u\n", gps_data.gps_last_index);
+      printf("\nButton pressed!\n");
+      printf("Last index: %d\n", gps_data.gps_last_index);
       printf("Last GPS event: %d, %u.%ld\n", gps_data.gps_last.data, (unsigned int)gps_data.gps_last.tv.tv_sec, gps_data.gps_last.tv.tv_usec);
-      //printf("(Interpolated) Push Button event: %lf, %u.%ld\n", y, (unsigned int)gps_data.event_tv.tv_sec, gps_data.event_tv.tv_usec);
+      printf("  Button event: %lf, %u.%ld\n", y, (unsigned int)gps_data.event_tv.tv_sec, gps_data.event_tv.tv_usec);
       printf("Next GPS event: %d, %u.%ld\n", gps_data.gps_next.data, (unsigned int)gps_data.gps_next.tv.tv_sec, gps_data.gps_next.tv.tv_usec);
+      fflush(stdout);
     }
 }
 
